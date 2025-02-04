@@ -7,11 +7,13 @@
 
 # nnodes determines the number of GPU nodes to utilize (usually 1 for an 8 GPU node)
 # nproc_per_node indicates the number of GPUs per node to employ.
-torchrun --nnodes=1 --nproc_per_node=2 optimize_rotation.py \
+input_model_stem=$(basename "$1")
+out_name=${input_model_stem}_w${2}_a${3}_k${4}_v${4}
+torchrun --nnodes=1 --nproc_per_node=1 optimize_rotation.py \
 --input_model $1  \
---output_rotation_path "/mnt/sh_flex_storage/home/yjiang2/models/spinquant/nohad_rotation" \
---output_dir "/mnt/sh_flex_storage/home/yjiang2/models/spinquant/nohad_rotation_output/" \
---logging_dir "/mnt/sh_flex_storage/home/yjiang2/models/spinquant/nohad_log/" \
+--output_rotation_path "/mnt/sh_flex_storage/home/yjiang2/models/spinquant/rotation_${out_name}" \
+--output_dir "/mnt/sh_flex_storage/home/yjiang2/models/spinquant/rotation_output_${out_name}/" \
+--logging_dir "/mnt/sh_flex_storage/home/yjiang2/models/spinquant/log_${out_name}/" \
 --model_max_length 2048 \
 --fp16 False \
 --bf16 True \
