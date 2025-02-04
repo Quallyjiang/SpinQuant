@@ -52,9 +52,12 @@ def ptq_model(args, model, model_args=None):
                 not args.save_qmodel_path
             ), "Cannot save a quantized model if it is already loaded!"
             print("Load quantized model from ", args.load_qmodel_path)
-            save_dict = torch.load(args.load_qmodel_path, weights_only=False)
-            model.load_state_dict(save_dict["model"])
-
+            if 0:
+                save_dict = torch.load(args.load_qmodel_path, weights_only=False)
+                model.load_state_dict(save_dict["model"])
+            else:
+                qweights = torch.load(args.load_qmodel_path+"_weights")
+                model.load_state_dict(qweights)
         elif not args.w_rtn:  # GPTQ Weight Quantization
             trainloader = data_utils.get_wikitext2(
                 nsamples=args.nsamples,
@@ -88,6 +91,9 @@ def ptq_model(args, model, model_args=None):
                     save_dict, group_size=args.w_groupsize
                 )
             torch.save(save_dict, args.save_qmodel_path)
+            weights = save_dict["model"]
+            weights = {k: v for k, v in weights.items() if "quantizer" not in k and "module" not in k}
+            torch.save(weights, args.save_qmodel_path+"_weights")
 
     # Add Input Quantization
     if args.a_bits < 16 or args.v_bits < 16:
