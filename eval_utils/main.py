@@ -31,13 +31,14 @@ def ptq_model(args, model, model_args=None):
 
         quant_utils.add_actquant(model)  # Add Activation Wrapper to the model
         qlayers = quant_utils.find_qlayers(model)
-        for name in qlayers:
-            if "down_proj" in name:
-                had_K, K = hadamard_utils.get_hadK(model.config.intermediate_size)
-                qlayers[name].online_full_had = True
-                qlayers[name].had_K = had_K
-                qlayers[name].K = K
-                qlayers[name].fp32_had = args.fp32_had
+        if args.a_bits < 16: # need to add r4 only if need to quantize activations
+            for name in qlayers:
+                if "down_proj" in name:
+                    had_K, K = hadamard_utils.get_hadK(model.config.intermediate_size)
+                    qlayers[name].online_full_had = True
+                    qlayers[name].had_K = had_K
+                    qlayers[name].K = K
+                    qlayers[name].fp32_had = args.fp32_had
     else:
         quant_utils.add_actquant(
             model
@@ -51,7 +52,7 @@ def ptq_model(args, model, model_args=None):
                 not args.save_qmodel_path
             ), "Cannot save a quantized model if it is already loaded!"
             print("Load quantized model from ", args.load_qmodel_path)
-            save_dict = torch.load(args.load_qmodel_path)
+            save_dict = torch.load(args.load_qmodel_path, weights_only=False)
             model.load_state_dict(save_dict["model"])
 
         elif not args.w_rtn:  # GPTQ Weight Quantization
